@@ -26,18 +26,25 @@ def get_secret(name: str) -> str | None:
         return env_secrets[name]
     return None
 
-api_key = get_secret("TAVILY_API_KEY")
-if not api_key:
-    raise ValueError(
-        "TAVILY_API_KEY is not set. Please set it in Streamlit secrets or add it to .env "
-        "as TAVILY_API_KEY=<value>."
-    )
+# Delay TavilyClient initialization until needed
+_tavily_client = None
 
-tavily = TavilyClient(api_key=api_key)
+def get_tavily_client():
+    global _tavily_client
+    if _tavily_client is None:
+        api_key = get_secret("TAVILY_API_KEY")
+        if not api_key:
+            raise ValueError(
+                "TAVILY_API_KEY is not set. Please set it in Streamlit secrets or add it to .env "
+                "as TAVILY_API_KEY=<value>."
+            )
+        _tavily_client = TavilyClient(api_key=api_key)
+    return _tavily_client
 
 @tool
 def web_search(query : str) -> str:
     """Search the web for recent and reliable information on a topic . Returns Titles , URLs and snippets."""
+    tavily = get_tavily_client()
     results = tavily.search(query=query,max_results=5)
 
     out = []
