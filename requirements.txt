@@ -1,3 +1,6 @@
+# Streamlit (main app framework)
+streamlit>=1.28.0
+
 # Core LLM + LangChain ecosystem
 langchain>=0.2.0
 langchain-core>=0.2.0
@@ -28,6 +31,19 @@ pandas>=2.0.0
 tiktoken>=0.6.0
 
 # Logging / debugging (optional but recommended)
+rich>=13.7.0
+
+# Retry + robustness
+tenacity>=8.2.0
+
+# JSON handling improvements
+orjson>=3.9.0
+
+# Typing support (helps in bigger projects)
+pydantic>=2.5.0
+
+# Optional (for advanced parsing / HTML cleanup)
+html5lib>=1.1
 rich>=13.7.0
 
 # Retry + robustness
