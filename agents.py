@@ -6,10 +6,35 @@ from tools import web_search , scrape_url
 from dotenv import load_dotenv
 import os
 
+try:
+    import streamlit as st
+except ImportError:
+    st = None
+
 load_dotenv()
 
-#model setup 
-llm = ChatGoogleGenerativeAI(model="gemini-3-flash-preview", temperature=0, google_api_key=os.getenv("GOOGLE_API_KEY"))
+# model setup
+
+def get_secret(name: str) -> str | None:
+    if os.getenv(name):
+        return os.getenv(name)
+    if not st:
+        return None
+    if name in st.secrets:
+        return st.secrets[name]
+    if "env" in st.secrets and name in st.secrets["env"]:
+        return st.secrets["env"][name]
+    return None
+
+google_api_key = get_secret("GOOGLE_API_KEY")
+if not google_api_key:
+    raise ValueError("GOOGLE_API_KEY is not set. Please add it to .env or Streamlit secrets.")
+
+llm = ChatGoogleGenerativeAI(
+    model="gemini-3-flash-preview",
+    temperature=0,
+    google_api_key=google_api_key,
+)
 
 
 #1st agent 
