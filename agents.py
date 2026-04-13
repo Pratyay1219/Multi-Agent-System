@@ -16,19 +16,24 @@ load_dotenv()
 # model setup
 
 def get_secret(name: str) -> str | None:
-    if os.getenv(name):
-        return os.getenv(name)
+    value = os.getenv(name)
+    if value:
+        return value
     if not st:
         return None
     if name in st.secrets:
         return st.secrets[name]
-    if "env" in st.secrets and name in st.secrets["env"]:
-        return st.secrets["env"][name]
+    env_secrets = st.secrets.get("env") if isinstance(st.secrets, dict) else None
+    if env_secrets and name in env_secrets:
+        return env_secrets[name]
     return None
 
 google_api_key = get_secret("GOOGLE_API_KEY")
 if not google_api_key:
-    raise ValueError("GOOGLE_API_KEY is not set. Please add it to .env or Streamlit secrets.")
+    raise ValueError(
+        "GOOGLE_API_KEY is not set. Please set it in Streamlit secrets or add it to .env "
+        "as GOOGLE_API_KEY=<value>."
+    )
 
 llm = ChatGoogleGenerativeAI(
     model="gemini-3-flash-preview",
