@@ -28,24 +28,29 @@ def get_secret(name: str) -> str | None:
         return env_secrets[name]
     return None
 
-google_api_key = get_secret("GOOGLE_API_KEY")
-if not google_api_key:
-    raise ValueError(
-        "GOOGLE_API_KEY is not set. Please set it in Streamlit secrets or add it to .env "
-        "as GOOGLE_API_KEY=<value>."
-    )
+# Delay LLM initialization until needed
+_llm = None
 
-llm = ChatGoogleGenerativeAI(
-    model="gemini-3-flash-preview",
-    temperature=0,
-    google_api_key=google_api_key,
-)
-
+def get_llm():
+    global _llm
+    if _llm is None:
+        google_api_key = get_secret("GOOGLE_API_KEY")
+        if not google_api_key:
+            raise ValueError(
+                "GOOGLE_API_KEY is not set. Please set it in Streamlit secrets or add it to .env "
+                "as GOOGLE_API_KEY=<value>."
+            )
+        _llm = ChatGoogleGenerativeAI(
+            model="gemini-3-flash-preview",
+            temperature=0,
+            google_api_key=google_api_key,
+        )
+    return _llm
 
 #1st agent 
 def build_search_agent():
     return create_agent(
-        model = llm,
+        model = get_llm(),
         tools= [web_search]
     )
 
@@ -53,7 +58,7 @@ def build_search_agent():
 
 def build_reader_agent():
     return create_agent(
-        model = llm,
+        model = get_llm(),
         tools = [scrape_url]
     )
 
@@ -78,7 +83,7 @@ Structure the report as:
 Be detailed, factual and professional."""),
 ])
 
-writer_chain = writer_prompt | llm | StrOutputParser()
+writer_chain = writer_prompt | get_llm() | StrOutputParser()
 
 #critic_chain 
 
@@ -105,4 +110,4 @@ One line verdict:
 ..."""),
 ])
 
-critic_chain = critic_prompt | llm | StrOutputParser()
+critic_chain = critic_prompt | get_llm() | StrOutputParser()
